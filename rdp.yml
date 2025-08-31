@@ -1,0 +1,35 @@
+name: Windows RDP with Ngrok
+on: workflow_dispatch
+
+jobs:
+  rdp:
+    runs-on: windows-latest
+    steps:
+    - name: Download Ngrok
+      run: |
+        Invoke-WebRequest https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-windows-amd64.zip -OutFile ngrok.zip
+        Expand-Archive ngrok.zip
+        Copy-Item .\ngrok\ngrok.exe . -Force
+
+    - name: Setup RDP User
+      run: |
+        net user githubRDP MyPassword123! /add
+        net localgroup administrators githubRDP /add
+        reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f
+        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+
+    - name: Start Ngrok Tunnel
+      run: |
+        .\ngrok authtoken $Env:2gfnRM1BCVWfE3azlJufRg7vGCs_LR8dRZo7hLWj1czG5LAR
+        Start-Process -NoNewWindow -FilePath ".\ngrok.exe" -ArgumentList "tcp 3389"
+        Start-Sleep -Seconds 25
+        Invoke-WebRequest -Uri http://127.0.0.1:4040/api/tunnels -OutFile tunnel.json
+        Get-Content tunnel.json
+      env:
+        NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+
+    - name: Save Tunnel as Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: tunnel
+        path: tunnel.json
