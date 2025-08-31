@@ -20,7 +20,7 @@ jobs:
 
     - name: Start Ngrok Tunnel
       run: |
-        .\ngrok authtoken $Env:2gfnRM1BCVWfE3azlJufRg7vGCs_LR8dRZo7hLWj1czG5LAR
+        .\ngrok.exe authtoken "$Env:2gfnRM1BCVWfE3azlJufRg7vGCs_LR8dRZo7hLWj1czG5LAR"
         Start-Process -NoNewWindow -FilePath ".\ngrok.exe" -ArgumentList "tcp 3389"
         Start-Sleep -Seconds 25
         Invoke-WebRequest -Uri http://127.0.0.1:4040/api/tunnels -OutFile tunnel.json
